@@ -227,7 +227,8 @@ foreach ($pDir in $profileDirs) {
     if (Test-Path $patchPath) {
         $patchContent = [System.IO.File]::ReadAllText($patchPath, [System.Text.Encoding]::UTF8)
     }
-    $cleanedPatch = $patchContent -replace '^\s*\[\]\s*$', ''
+    # 只移除首个根节点的空数组，保留注释及嵌套配置中的 []。
+    $cleanedPatch = $patchContent -replace '^(\uFEFF?(?:[ \t]*(?:#[^\r\n]*)?\r?\n)*)[ \t]*\[\]([ \t]*(?:#[^\r\n]*)?)(?=\r?\n|$)', '$1$2'
     foreach ($old in $legacyPlugins) {
         $cleanedPatch = $cleanedPatch -replace "(?m)^\s*-\s*insert:\s*\r?\n\s*-\s*id:\s*$old[\s\S]*?(?=(^\s*-\s*insert:|\z))", ""
     }

@@ -152,9 +152,16 @@ export function applyCordisPatch(profileDir, pluginName = "fujiang-armor") {
       content = fs.readFileSync(patchPath, "utf8");
     }
 
-    if (!content.includes(pluginName)) {
-      const newContent = content.trim() ? `${content.trim()}\n\n${overlayBlock}` : overlayBlock;
+    // DSH's default patch contains comments followed by an empty root array.
+    // Also repair files from earlier installs, even if the mount already exists.
+    const cleanedContent = content.replace(/^(\uFEFF?(?:[ \t]*(?:#[^\r\n]*)?\r?\n)*)[ \t]*\[\]([ \t]*(?:#[^\r\n]*)?)(?=\r?\n|$)/, "$1$2");
+    if (!cleanedContent.includes(pluginName)) {
+      const newContent = cleanedContent.trim() ? `${cleanedContent.trim()}\n\n${overlayBlock}` : overlayBlock;
       fs.writeFileSync(patchPath, newContent, "utf8");
+      return { status: "patched", path: patchPath };
+    }
+    if (cleanedContent !== content) {
+      fs.writeFileSync(patchPath, cleanedContent, "utf8");
       return { status: "patched", path: patchPath };
     }
     return { status: "already_configured", path: patchPath };

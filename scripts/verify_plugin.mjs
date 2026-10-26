@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { runInNewContext } from "node:vm";
 import { test } from "node:test";
 import * as plugin from "../index.js";
+import "./cordis_patch_test.mjs";
 
 const root = new URL("../", import.meta.url);
 const load = (file) => readFileSync(new URL(file, root));

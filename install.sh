@@ -121,7 +121,8 @@ if (pkg.dsh && pkg.dsh.profile && pkg.dsh.profile.bundles) {
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
 let patchContent = fs.existsSync(patchPath) ? fs.readFileSync(patchPath, "utf8") : "";
-let cleanedPatch = patchContent.replace(/^\s*\[\]\s*$/m, "");
+// Only remove the initial empty root array, preserving comments and nested [].
+let cleanedPatch = patchContent.replace(/^(\uFEFF?(?:[ \t]*(?:#[^\r\n]*)?\r?\n)*)[ \t]*\[\]([ \t]*(?:#[^\r\n]*)?)(?=\r?\n|$)/, "$1$2");
 for (const old of legacy) {
   const reg = new RegExp("^\\s*-\\s*insert:\\s*\\r?\\n\\s*-\\s*id:\\s*" + old + "[\\s\\S]*?(?=(^\\s*-\\s*insert:|\\z))", "gm");
   cleanedPatch = cleanedPatch.replace(reg, "");
