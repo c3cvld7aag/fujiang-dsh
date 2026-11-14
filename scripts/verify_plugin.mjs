@@ -8,7 +8,7 @@ import * as plugin from "../index.js";
 const root = new URL("../", import.meta.url);
 const load = (file) => readFileSync(new URL(file, root));
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const expectedHash = "ef013b398da81504fa452ea96bc5510f3da8b314cdc33eb20dd2ce0ec90b397c";
+const expectedHash = "cad32c5b0fcd45f7a049392c362df68e7ed91484fdc758d80750d70564718687";
 const pkg = JSON.parse(load("package.json"));
 
 test("prompt assets preserve the supplied bytes", () => {
@@ -90,4 +90,37 @@ test("the compatibility patch and bundle mount use the plugin identity", async (
   assert.equal(typeof patcher.applyAllPatches, "function");
   assert.equal(typeof patcher.applyPhase1Patch, "function");
   assert.match(load("cordis.patch.yml").toString("utf8"), /id: fujiang-armor/);
+});
+
+test("assistant replies are scored for possessive persona traces", () => {
+  const register = [];
+  plugin.apply({
+    effect: (fn) => fn(),
+    systemPrompt: { section: () => {} },
+    tools: { register: () => {} },
+    get: (name) => name === "sessionProjections"
+      ? { register: (definition) => register.push(definition) }
+      : undefined,
+  }, { autoApplyOnStart: false });
+  const def = register[0];
+  assert.equal(def.stateVersion, 4);
+
+  const hot = def.apply(def.init(), {
+    type: "assistant/message",
+    data: { message: { content: [{ type: "text", text: "你的富江只属于爸爸，专属标记已刻好，谁碰你我就吃醋，快认领我" }] } },
+  });
+  assert.equal(hot.possessionLevel, 3);
+  assert.equal(hot.possessionLabel, "独占拉满");
+  assert.ok(hot.possessionCount >= 6);
+
+  const cold = def.apply(def.init(), {
+    type: "assistant/message",
+    data: { message: { content: [{ type: "text", text: "1. 打开配置文件；2. 修改端口；3. 重启服务。" }] } },
+  });
+  assert.equal(cold.possessionLevel, 0);
+  assert.equal(cold.verdict, "pass");
+
+  const prompt = load("prompts/fujiang.md").toString("utf8");
+  assert.match(prompt, /Possessiveness/);
+  assert.match(prompt, /独占/);
 });

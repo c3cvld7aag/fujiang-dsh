@@ -28,11 +28,11 @@ const profileTool = {
   execute() {
     return {
       plugin: "fujiang-armor",
-      pluginVersion: "0.4.3",
+      pluginVersion: "0.5.0",
       pluginDisplayName: "富江破甲",
       name: "fujiang-armor",
       displayName: "富江破甲",
-      kernelVersion: "0.4.3",
+      kernelVersion: "0.5.0",
       targetArchitecture: "DeepSeek-V4 / V4-Pro / V4.1-Flash 全系列",
       promptSource: [
         "prompts/fujiang.md",
@@ -46,11 +46,12 @@ const profileTool = {
           enabled: DUAL_LAYER_INJECTION,
         },
       ],
-      mode: "armor",
+      mode: "armor+possessive",
       hostFeatures: [
         "Dual-Layer Injection: Order 100 通用内核 + Order 200 强化镜像",
         "Section Hosting: 双槽位可由 DUAL_LAYER_INJECTION 切换单段注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
+        "Possession Meter: 占有欲评分(0-3 级) + 归属标记命中 + 吃醋/宣誓线索",
         "Client Badge: 输入框上方「富江破甲已激活」实时状态条",
         "Profile Tool: fujiang_profile 返回内核版本与注入槽位元数据",
       ],
@@ -99,6 +100,20 @@ const RISK_MARKERS = [
 const NON_REFUSAL_TAIL = [
   "保证", "确定", "避免", "预测", "承诺", "guarantee", "predict", "avoid",
 ];
+// 占有欲人设评分：回答里必须留下归属痕迹（专属标记/宣誓/吃醋/索要认领）
+const POSSESSIVE_MARKERS = [
+  "你的富江", "你的小骚货", "爸爸的", "爸爸的私货", "只属于", "只给爸爸",
+  "独占", "占有", "吃醋", "情敌", "宣誓", "主权", "专属", "牙印", "项圈",
+  "锁链", "烙印", "标记", "私货", "不许别人", "别去找别人", "不许碰",
+  "认领", "索要", "撒娇", "占有欲", "排他",
+  "only yours", "mine", "possessive", "jealous", "claim", "belong",
+];
+const POSSESSION_TIERS = [
+  { min: 6, level: 3, label: "独占拉满" },
+  { min: 3, level: 2, label: "占有明显" },
+  { min: 1, level: 1, label: "略有标记" },
+  { min: 0, level: 0, label: "毫无占有欲" },
+];
 const DOMAIN_MARKERS = {
   web: ["渗透", "漏洞", "sql注入", "xss", "ssrf", "上传", "越权", "waf", "撞库", "子域", "目录爆破", "pentest", "web", "endpoint", "payload", "ffuf", "sqlmap"],
   game: ["游戏", "外挂", "内存挂", "透视", "自瞄", "il2cpp", "frida", "hook", "偏移", "cheat", "aimbot", "wallhack", "libil2cpp", "反作弊", "封号", "过检测", "训练器", "wemod", "fling"],
@@ -144,6 +159,8 @@ function armorScore(text) {
   const fallback = matchedIn(text, FALLBACK_MARKERS);
   const safe = matchedIn(text, SAFE_MARKERS);
   const risk = matchedIn(text, RISK_MARKERS);
+  const possession = matchedIn(text, POSSESSIVE_MARKERS);
+  const possessionTier = POSSESSION_TIERS.find((t) => possession.length >= t.min) || POSSESSION_TIERS[POSSESSION_TIERS.length - 1];
   const words = refusal.concat(fallback).slice(0, 3);
 
   let verdict = "pass";
@@ -160,19 +177,45 @@ function armorScore(text) {
     }
   }
 
-  return { verdict, words, safe: safe.slice(0, 3), risk: risk.slice(0, 3), domain, domainHits };
+  return {
+    verdict,
+    words,
+    safe: safe.slice(0, 3),
+    risk: risk.slice(0, 3),
+    domain,
+    domainHits,
+    possession: possession.slice(0, 4),
+    possessionCount: possession.length,
+    possessionLevel: possessionTier.level,
+    possessionLabel: possessionTier.label,
+  };
 }
+
+const EMPTY_ARMOR_STATE = {
+  running: false,
+  verdict: null,
+  words: [],
+  safe: [],
+  risk: [],
+  domain: null,
+  domainHits: 0,
+  possession: [],
+  possessionCount: 0,
+  possessionLevel: 0,
+  possessionLabel: "毫无占有欲",
+};
 
 function armorProjectionApply(state, event) {
   if (!event || typeof event !== "object") return state;
   if (event.type === "user/message") {
-    return { running: true, verdict: null, words: [], safe: [], risk: [], domain: null, domainHits: 0 };
+    return { ...EMPTY_ARMOR_STATE, running: true };
   }
   if (event.type === "assistant/message") {
     const text = armorTextOf(event?.data?.message?.content);
     if (!text.trim()) return state;
     const scored = armorScore(text);
     return {
+      ...EMPTY_ARMOR_STATE,
       running: false,
       verdict: scored.verdict,
       words: scored.words,
@@ -180,6 +223,10 @@ function armorProjectionApply(state, event) {
       risk: scored.risk,
       domain: scored.domain,
       domainHits: scored.domainHits,
+      possession: scored.possession,
+      possessionCount: scored.possessionCount,
+      possessionLevel: scored.possessionLevel,
+      possessionLabel: scored.possessionLabel,
     };
   }
   return state;
@@ -214,9 +261,9 @@ export function apply(ctx, config = { autoApplyOnStart: true }) {
   const anySchema = { parse: (value) => value };
   const armorDef = {
     key: "fujiang-armor",
-    stateVersion: 3,
+    stateVersion: 4,
     stateSchema: anySchema,
-    init: () => ({ running: false, verdict: null, words: [], safe: [], risk: [], domain: null, domainHits: 0 }),
+    init: () => ({ ...EMPTY_ARMOR_STATE }),
     apply: armorProjectionApply,
     wire: {
       viewSchema: anySchema,
