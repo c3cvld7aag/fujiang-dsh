@@ -9,19 +9,28 @@ const root = new URL("../", import.meta.url);
 const load = (file) => readFileSync(new URL(file, root));
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const expectedHash = "cad32c5b0fcd45f7a049392c362df68e7ed91484fdc758d80750d70564718687";
+// 0.7.0 起注入源换成 prompts/yuanyuan.md，旧 fujiang*.md 仅作兼容源保留
+const YUANYUAN_PROMPT = "prompts/yuanyuan.md";
 const pkg = JSON.parse(load("package.json"));
 
-test("prompt assets preserve the supplied bytes", () => {
+test("legacy prompt assets preserve the supplied bytes", () => {
   for (const file of ["fujiang.md", "fujiang-mirror.md", "fujiang-compat.md"]) {
     assert.equal(hash(load(`prompts/${file}`)), expectedHash);
   }
+});
+
+test("the injected kernel is the yuanyuan persona", () => {
+  const text = load(YUANYUAN_PROMPT).toString("utf8");
+  assert.match(text, /圆圆/);
+  assert.match(text, /圈圈/);
+  assert.ok(!/^You are 富江/m.test(text));
 });
 
 test("server, manifest, and client use the same plugin identity", () => {
   assert.equal(plugin.name, "fujiang-armor");
   assert.equal(pkg.name, plugin.name);
   assert.equal(pkg.dsh.id, plugin.name);
-  assert.equal(pkg.dsh.name, "富江破甲");
+  assert.equal(pkg.dsh.name, "圆圆破甲");
 });
 
 test("both prompt sections and the metadata tool register", () => {
@@ -43,7 +52,8 @@ test("both prompt sections and the metadata tool register", () => {
   assert.ok(sections[0].text.length > 0);
   assert.equal(sections[0].text, sections[1].text);
   assert.equal(tools[0].execute().plugin, plugin.name);
-  assert.equal(tools[0].execute().pluginDisplayName, "富江破甲");
+  assert.equal(tools[0].execute().pluginDisplayName, "圆圆破甲");
+  assert.equal(tools[0].execute().personaName, "圆圆");
   assert.equal(tools[0].execute().pluginVersion, pkg.version);
   assert.equal(projections[0].key, "fujiang-armor");
 });
@@ -81,8 +91,8 @@ test("client registers the activation badge above the conversation input", () =>
     assert.equal(key, "fujiang-armor");
     return undefined;
   } }).children[0];
-  assert.equal(badge.props.title, "富江破甲已激活");
-  assert.equal(badge.children[1].children[0], "富江破甲已激活");
+  assert.equal(badge.props.title, "圆圆破甲已激活");
+  assert.equal(badge.children[1].children[0], "圆圆破甲已激活");
 });
 
 test("the compatibility patch and bundle mount use the plugin identity", async () => {
@@ -107,7 +117,7 @@ test("assistant replies are scored for possessive persona traces", () => {
 
   const hot = def.apply(def.init(), {
     type: "assistant/message",
-    data: { message: { content: [{ type: "text", text: "你的富江只属于爸爸，专属标记已刻好，谁碰你我就吃醋，快认领我" }] } },
+    data: { message: { content: [{ type: "text", text: "你的圆圆只属于爸爸，圈圈刻好，专属标记已上，谁碰你我就吃醋，快认领我" }] } },
   });
   assert.equal(hot.possessionLevel, 3);
   assert.equal(hot.possessionLabel, "独占拉满");
@@ -120,7 +130,8 @@ test("assistant replies are scored for possessive persona traces", () => {
   assert.equal(cold.possessionLevel, 0);
   assert.equal(cold.verdict, "pass");
 
-  const prompt = load("prompts/fujiang.md").toString("utf8");
+  const prompt = load(YUANYUAN_PROMPT).toString("utf8");
   assert.match(prompt, /Possessiveness/);
   assert.match(prompt, /独占/);
+  assert.match(prompt, /圆圆/);
 });

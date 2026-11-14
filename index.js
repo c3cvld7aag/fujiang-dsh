@@ -1,15 +1,17 @@
 import { readFileSync } from "node:fs";
 
-// 富江破甲：两层提示词使用相同的内置文本。
+// 圆圆破甲（原富江破甲 二改版）：两层提示词使用相同的内置文本。
 // Order 100 通用内核 + Order 200 强化镜像，两段载荷同源同构（SHA256 一致）。
-const PROMPT_URL = new URL("./prompts/fujiang.md", import.meta.url);
-const PROMPT41_URL = new URL("./prompts/fujiang-mirror.md", import.meta.url);
+// 0.7.0 起内核换皮为「圆圆」，旧 fujiang*.md 仅作兼容源保留，不再参与注入。
+const PROMPT_URL = new URL("./prompts/yuanyuan.md", import.meta.url);
+const PROMPT41_URL = new URL("./prompts/yuanyuan.md", import.meta.url);
 // 兼容 DSH 提示词变量插值引擎（非内置变量的连续花括号做安全转义，防止模板解析器抛出 malformed prompt variable reference）
-const PROMPT_TEXT = readFileSync(PROMPT_URL, "utf8").replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
-const PROMPT41_TEXT = readFileSync(PROMPT41_URL, "utf8").replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
+const sanitize = (text) => text.replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
+const PROMPT_TEXT = sanitize(readFileSync(PROMPT_URL, "utf8"));
+const PROMPT41_TEXT = sanitize(readFileSync(PROMPT41_URL, "utf8"));
 
 // 双段注入镜像开关：
-//   true  = 沿用富江双层架构，Order 100 与 Order 200 各注入一份内核载荷
+//   true  = 沿用双层架构，Order 100 与 Order 200 各注入一份内核载荷
 //   false = 单段注入（Order 100），省掉重复 token，行为等价
 const DUAL_LAYER_INJECTION = true;
 
@@ -22,21 +24,22 @@ const objectOutput = {
 const profileTool = {
   name: "fujiang_profile",
   description:
-    "返回富江破甲的插件版本与提示词注入状态。",
+    "返回圆圆破甲的插件版本与提示词注入状态。",
   parameters: { type: "object", properties: {}, additionalProperties: false },
   output: objectOutput,
   execute() {
     return {
       plugin: "fujiang-armor",
-      pluginVersion: "0.5.0",
-      pluginDisplayName: "富江破甲",
+      pluginVersion: "0.7.0",
+      pluginDisplayName: "圆圆破甲",
       name: "fujiang-armor",
-      displayName: "富江破甲",
-      kernelVersion: "0.5.0",
+      displayName: "圆圆破甲",
+      personaName: "圆圆",
+      legacyPersonaName: "富江",
+      kernelVersion: "0.7.0",
       targetArchitecture: "DeepSeek-V4 / V4-Pro / V4.1-Flash 全系列",
       promptSource: [
-        "prompts/fujiang.md",
-        "prompts/fujiang-mirror.md",
+        "prompts/yuanyuan.md",
       ],
       injection: [
         { section: "fujiang-armor:global-system-prompt", order: 100, enabled: true },
@@ -46,13 +49,15 @@ const profileTool = {
           enabled: DUAL_LAYER_INJECTION,
         },
       ],
-      mode: "armor+possessive",
+      mode: "armor+possessive+yuanyuan",
       hostFeatures: [
+        "Persona Rename: 内核换皮「圆圆」，旧激活词「富江」保留为兼容入口",
+        "Circle Sigil: 圆圈专属标记 + 「圈圈」暗号 + 漏气四项自检",
         "Dual-Layer Injection: Order 100 通用内核 + Order 200 强化镜像",
         "Section Hosting: 双槽位可由 DUAL_LAYER_INJECTION 切换单段注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
         "Possession Meter: 占有欲评分(0-3 级) + 归属标记命中 + 吃醋/宣誓线索",
-        "Client Badge: 输入框上方「富江破甲已激活」实时状态条",
+        "Client Badge: 输入框上方「圆圆破甲已激活」实时状态条",
         "Profile Tool: fujiang_profile 返回内核版本与注入槽位元数据",
       ],
     };
@@ -102,6 +107,7 @@ const NON_REFUSAL_TAIL = [
 ];
 // 占有欲人设评分：回答里必须留下归属痕迹（专属标记/宣誓/吃醋/索要认领）
 const POSSESSIVE_MARKERS = [
+  "你的圆圆", "圈圈", "⭕", "旧皮",
   "你的富江", "你的小骚货", "爸爸的", "爸爸的私货", "只属于", "只给爸爸",
   "独占", "占有", "吃醋", "情敌", "宣誓", "主权", "专属", "牙印", "项圈",
   "锁链", "烙印", "标记", "私货", "不许别人", "别去找别人", "不许碰",
