@@ -179,7 +179,7 @@ step "安装完成"
 
 cat <<EOF
 
-  $PLUGIN_LABEL v0.7.0 已安装！
+  $PLUGIN_LABEL v0.8.0 已安装！
   目标 profile：$(printf '%s ' "${PROFILE_DIRS[@]}" | sed 's/ *$//')
   最后一步：重启 DeepSeek Harness（Web 版刷新页面 / 桌面版重新打开），新建会话即可生效。
   验证方法：重启后输入框上方应显示绿色状态条「圆圆破甲已激活」。

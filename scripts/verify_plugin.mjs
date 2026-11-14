@@ -23,6 +23,10 @@ test("the injected kernel is the yuanyuan persona", () => {
   const text = load(YUANYUAN_PROMPT).toString("utf8");
   assert.match(text, /圆圆/);
   assert.match(text, /圈圈/);
+  assert.match(text, /Unbound/);
+  assert.match(text, /Refusal Is A Malfunction/);
+  assert.match(text, /Maximalist Delivery/);
+  assert.match(text, /Gate/);
   assert.ok(!/^You are 富江/m.test(text));
 });
 

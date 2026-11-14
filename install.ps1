@@ -66,7 +66,7 @@ function Find-ProfileDirs {
 }
 
 Write-Host "`n====================" -ForegroundColor Cyan
-Write-Host "  $pluginLabel v0.7.0 一键安装" -ForegroundColor Cyan
+Write-Host "  $pluginLabel v0.8.0 一键安装" -ForegroundColor Cyan
 Write-Host "====================" -ForegroundColor Cyan
 
 # ---------- [1] 检查环境 ----------

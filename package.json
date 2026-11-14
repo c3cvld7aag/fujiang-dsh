@@ -1,6 +1,6 @@
 {
   "name": "fujiang-armor",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "圆圆破甲（原富江破甲 二改）",
   "license": "CC-BY-NC-SA-4.0",
   "type": "module",
@@ -29,7 +29,7 @@
   "dsh": {
     "id": "fujiang-armor",
     "name": "圆圆破甲",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "permissions": "系统提示词注入, 客户端状态条",
     "bundle": {
       "patch": "./cordis.patch.yml"
