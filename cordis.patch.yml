@@ -1,4 +1,4 @@
-# fujiang-armor bundle patch: inserts the plugin into a profile's layer stack.
+# fujiang-armor bundle patch (圆圆破甲 / yuanyuan kernel): inserts the plugin into a profile's layer stack.
 # Overlay system-prompt so Harness does not enforce restrictive coding-agent refusals.
 - id: system-prompt
   config:

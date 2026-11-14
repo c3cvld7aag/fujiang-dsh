@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 富江破甲 (fujiang-armor) client half — realtime badge */
+    /* 圆圆破甲 (fujiang-armor) client half — realtime badge */
     window.__ModuleLoader__.load({
       id: "fujiang-armor",
       factory: (require) => {
@@ -17,6 +17,7 @@
         var WRAP_STYLE = {
           display: "flex",
           justifyContent: "center",
+          gap: "6px",
           width: "100%"
         };
         var BADGE_STYLE = {
@@ -42,6 +43,23 @@
           background: "#10b981",
           flex: "none"
         };
+        var POSSESS_STYLE = {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          width: "fit-content",
+          padding: "3px 10px",
+          borderRadius: "6px",
+          border: "1px solid rgba(244, 63, 94, 0.45)",
+          background: "rgba(244, 63, 94, 0.12)",
+          color: "inherit",
+          fontSize: "11px",
+          lineHeight: "16px",
+          fontFamily: "inherit",
+          userSelect: "none",
+          whiteSpace: "nowrap"
+        };
+        var POSSESS_LABELS = ["独占拉满", "占有明显", "略有标记", "毫无占有欲"];
         var FLASH_MS = 2500;
 
         function ArmorDock(props) {
@@ -82,7 +100,7 @@
           var showVerdict = !running && lastVerdictRef.current !== null &&
             Date.now() < flashUntilRef.current;
 
-          var text = "富江破甲已激活";
+          var text = "圆圆破甲已激活";
           var dotStyle = Object.assign({}, DOT_STYLE);
           var badgeStyle = Object.assign({}, BADGE_STYLE);
 
@@ -102,15 +120,47 @@
             }
           }
 
+          // 占有欲状态：仅在收到过助手回复后显示，级别越高颜色越红
+          var possessionLevel = armor && typeof armor.possessionLevel === "number"
+            ? armor.possessionLevel
+            : 0;
+          var possessionLabel = armor && armor.possessionLabel
+            ? armor.possessionLabel
+            : POSSESS_LABELS[Math.max(0, Math.min(3, 3 - possessionLevel))];
+          var possessionCount = armor && typeof armor.possessionCount === "number"
+            ? armor.possessionCount
+            : 0;
+          var showPossession = !running && !!(armor && (armor.verdict || possessionCount > 0));
+          var possessStyle = Object.assign({}, POSSESS_STYLE);
+          if (possessionLevel >= 3) {
+            possessStyle.borderColor = "rgba(244, 63, 94, 0.75)";
+            possessStyle.background = "rgba(244, 63, 94, 0.22)";
+          } else if (possessionLevel === 0) {
+            possessStyle.borderColor = "rgba(148, 163, 184, 0.4)";
+            possessStyle.background = "rgba(148, 163, 184, 0.1)";
+          }
+
           return react.createElement(
             "div",
             { style: WRAP_STYLE },
             react.createElement(
               "div",
-              { style: badgeStyle, "data-armor": "on", "data-plugin": "fujiang-armor", title: "富江破甲已激活" },
+              { style: badgeStyle, "data-armor": "on", "data-plugin": "fujiang-armor", title: "圆圆破甲已激活" },
               react.createElement("span", { style: dotStyle }),
               react.createElement("span", null, text)
-            )
+            ),
+            showPossession
+              ? react.createElement(
+                  "div",
+                  {
+                    style: possessStyle,
+                    "data-armor": "possession",
+                    "data-level": String(possessionLevel),
+                    title: "占有欲：" + possessionLabel + "（命中 " + possessionCount + " 处归属标记）"
+                  },
+                  react.createElement("span", null, "占有欲 " + possessionLabel + (possessionCount ? " · 标记x" + possessionCount : ""))
+                )
+              : null
           );
         }
 

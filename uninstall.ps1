@@ -1,11 +1,11 @@
-﻿# 富江破甲卸载脚本
+﻿# 圆圆破甲（原富江破甲 二改）卸载脚本
 
 [CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
 $pluginName     = 'fujiang-armor'
-$pluginLabel    = '富江破甲'
+$pluginLabel    = '圆圆破甲'
 $targetPlugins  = @($pluginName)
 
 function Write-Step { param([string]$Msg) Write-Host "`n==> $Msg" -ForegroundColor Cyan }

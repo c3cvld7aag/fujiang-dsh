@@ -60,4 +60,4 @@ for old in "${TARGET_PLUGINS[@]}"; do
   fi
 done
 
-echo "==> 富江破甲卸载完成，请重启 DeepSeek Harness。"
+echo "==> 圆圆破甲卸载完成，请重启 DeepSeek Harness。"

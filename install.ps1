@@ -1,11 +1,11 @@
-﻿# 富江破甲安装脚本
+﻿# 圆圆破甲（原富江破甲 二改）安装脚本
 
 [CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
 $pluginName     = 'fujiang-armor'
-$pluginLabel    = '富江破甲'
+$pluginLabel    = '圆圆破甲'
 $legacyPlugins  = @()
 
 # ---------- 输出辅助 ----------
@@ -66,7 +66,7 @@ function Find-ProfileDirs {
 }
 
 Write-Host "`n====================" -ForegroundColor Cyan
-Write-Host "  $pluginLabel v0.4.3 一键安装" -ForegroundColor Cyan
+Write-Host "  $pluginLabel v0.8.0 一键安装" -ForegroundColor Cyan
 Write-Host "====================" -ForegroundColor Cyan
 
 # ---------- [1] 检查环境 ----------
@@ -105,7 +105,7 @@ if ($restartLoopRiskProfiles.Count -gt 0) {
     Write-Warn "检测到 dsh-purge 1.1.52（profile: $riskProfiles），该版本的补丁状态缺失时可能触发循环重启。请先按 dsh-purge 官方说明升级到 1.1.53 或更新版本，再重新启动 DSH。安装器不会修改第三方插件状态。"
 }
 
-foreach ($relativeFile in @('package.json', 'index.js', 'client.js', 'scripts\ensure-runtime.ps1', 'scripts\lib\migrate.js', 'scripts\lib\patcher.js', 'prompts\fujiang.md')) {
+foreach ($relativeFile in @('package.json', 'index.js', 'client.js', 'scripts\ensure-runtime.ps1', 'scripts\lib\migrate.js', 'scripts\lib\patcher.js', 'prompts\fujiang.md', 'prompts\yuanyuan.md')) {
     if (-not (Test-Path -LiteralPath (Join-Path $srcDir $relativeFile) -PathType Leaf)) {
         Write-Err "安装包缺少文件：$relativeFile。请完整解压后再运行，不要只复制 BAT 文件。"
         exit 1
@@ -354,7 +354,7 @@ Write-Host "  目标 profile：$((($profileDirs | ForEach-Object { Split-Path $_
 Write-Host '  最后一步：完全退出并重启 DeepSeek Harness（Web 版刷新页面 / 桌面版重新打开），' -ForegroundColor White
 Write-Host '  新建会话即可生效。' -ForegroundColor White
 Write-Host ''
-Write-Host '  验证方法：重启后输入框上方应显示绿色状态条「富江破甲已激活」。' -ForegroundColor Yellow
+Write-Host '  验证方法：重启后输入框上方应显示绿色状态条「圆圆破甲已激活」。' -ForegroundColor Yellow
 Write-Host ''
 Write-Host '  卸载方法：双击「点我一键卸载.bat」。' -ForegroundColor Yellow
 Write-Host ''
